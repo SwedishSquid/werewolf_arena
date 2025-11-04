@@ -257,7 +257,8 @@ class GameMaster:
 
   def resolve_night_phase(self):
     """Resolve elimination and protection during the night phase."""
-    if self.this_round.eliminated != self.this_round.protected:
+    someone_was_eliminated = self.this_round.eliminated != self.this_round.protected
+    if someone_was_eliminated:
       eliminated_player = self.this_round.eliminated
       self.this_round.players.remove(eliminated_player)
       announcement = (
@@ -270,7 +271,7 @@ class GameMaster:
 
     for name in self.this_round.players:
       player = self.state.players[name]
-      if player.gamestate:
+      if player.gamestate and someone_was_eliminated:
         player.gamestate.remove_player(self.this_round.eliminated)
       player.add_announcement(announcement)
 

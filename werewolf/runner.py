@@ -49,20 +49,26 @@ _WEREWOLF_MODELS = flags.DEFINE_list(
 _ARENA = flags.DEFINE_boolean(
     "arena", False, "Only run games using different models for villagers and werewolves"
 )
-_THREADS = flags.DEFINE_integer("threads", 2, "Number of threads to run.")
+_THREADS = flags.DEFINE_integer("threads", 8, "Number of threads to run.")
 
 DEFAULT_WEREWOLF_MODELS = ["flash", "pro1.5"]
 DEFAULT_VILLAGER_MODELS = ["flash", "pro1.5"]
 RESUME_DIRECTORIES = []
 
 model_to_id = {
-    "pro1.5": "gemini-1.5-pro-preview-0514",
-    "flash": "gemini-1.5-flash-001",
-    "pro1": "gemini-pro",
-    "gpt4": "gpt-4-turbo-2024-04-09",
-    "gpt4o": "gpt-4o-2024-05-13",
-    "gpt3.5": "gpt-3.5-turbo-0125",
+    # "pro1.5": "gemini-1.5-pro-preview-0514",
+    # "flash": "gemini-1.5-flash-001",
+    # "pro1": "gemini-pro",
+    # "gpt4": "gpt-4-turbo-2024-04-09",
+    # "gpt4o": "gpt-4o-2024-05-13",
+    # "gpt3.5": "gpt-3.5-turbo-0125",
 }
+
+
+def map_model_to_id(model: str):
+    if model in model_to_id:
+        return model_to_id[model]
+    return model
 
 
 def initialize_players(
@@ -240,8 +246,8 @@ def run_game(
 def run() -> None:
     villager_models = _VILLAGER_MODELS.value or DEFAULT_VILLAGER_MODELS
     werewolf_models = _WEREWOLF_MODELS.value or DEFAULT_WEREWOLF_MODELS
-    v_ids = [model_to_id[m] for m in villager_models]
-    w_ids = [model_to_id[m] for m in werewolf_models]
+    v_ids = [map_model_to_id(m) for m in villager_models]
+    w_ids = [map_model_to_id(m) for m in werewolf_models]
     model_combinations = list(itertools.product(v_ids, w_ids))
     if _RUN_GAME.value:
         villager_model, werewolf_model = model_combinations[0]
