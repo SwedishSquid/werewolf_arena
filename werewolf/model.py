@@ -177,7 +177,7 @@ class Player(Deserializable):
         "debate_turns_left": MAX_DEBATE_TURNS - len(formatted_debate),
         "personality": self.personality,
         "num_players": NUM_PLAYERS,
-        "num_villagers": NUM_PLAYERS - 4, 
+        "num_villagers": NUM_PLAYERS - 2, #- 4,
     }
 
   def _generate_action(
@@ -375,6 +375,8 @@ class Seer(Player):
       raise ValueError(
           "GameView not initialized. Call initialize_game_view() first."
       )
+    
+    raise RuntimeError("Seer should be removed - how did you call unmask i wonder?")
 
     options = [
         player
@@ -421,6 +423,8 @@ class Doctor(Player):
       raise ValueError(
           "GameView not initialized. Call initialize_game_view() first."
       )
+    
+    raise RuntimeError("doctor should be removed! Yet somehow called 'save'")
 
     options = list(self.gamestate.current_players)
     random.shuffle(options)
@@ -525,7 +529,7 @@ class State(Deserializable):
         player.name: player
         for player in self.villagers
         + self.werewolves
-        + [self.doctor, self.seer]
+        # + [self.doctor, self.seer]
     }
     self.rounds: List[Round] = []
     self.error_message: str = ""
@@ -548,7 +552,7 @@ class State(Deserializable):
     seer = Seer.from_json(data.get("seer"))
 
     players = {}
-    for p in werewolves + villagers + [doctor, seer]:
+    for p in werewolves + villagers + []: # doctor, seer
       players[p.name] = p
 
     o = cls(

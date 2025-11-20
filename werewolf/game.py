@@ -77,6 +77,7 @@ class GameMaster:
 
   def protect(self):
     """Doctor chooses a player to protect."""
+    raise RuntimeError("called protect in a game without a doctor")
     if self.state.doctor.name not in self.this_round.players:
       return  # Doctor no longer in the game
 
@@ -91,6 +92,7 @@ class GameMaster:
 
   def unmask(self):
     """Seer chooses a player to unmask."""
+    raise RuntimeError("called unmask in a game without a seer")
     if self.state.seer.name not in self.this_round.players:
       return  # Seer no longer in the game
 
@@ -291,8 +293,8 @@ class GameMaster:
             self.eliminate,
             "The Werewolves are picking someone to remove from the game.",
         ),
-        (self.protect, "The Doctor is protecting someone."),
-        (self.unmask, "The Seer is investigating someone."),
+        # (self.protect, "The Doctor is protecting someone."),
+        # (self.unmask, "The Seer is investigating someone."),
         (self.resolve_night_phase, ""),
         (self.check_for_winner, "Checking for a winner after Night Phase."),
         (self.run_day_phase, "The Players are debating and voting."),

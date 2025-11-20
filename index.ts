@@ -625,11 +625,12 @@ class UIManager {
     let ww_names = demo.data['state']['werewolves'].map((wolf: any) => {
       return wolf.name;
     });
-    if (name == demo.data['state']['doctor'].name) {
-      return 'Doctor';
-    } else if (name == demo.data['state']['seer'].name) {
-      return 'Seer';
-    } else if (ww_names.includes(name)) {
+    // if (name == demo.data['state']['doctor'].name) {
+    //   return 'Doctor';
+    // } else if (name == demo.data['state']['seer'].name) {
+    //   return 'Seer';
+    // } else 
+    if (ww_names.includes(name)) {
       return 'Werewolf';
     } else {
       return 'Villager';

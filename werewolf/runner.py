@@ -79,19 +79,19 @@ def initialize_players(
     player_names = get_player_names()
     random.shuffle(player_names)
 
-    seer = Seer(
-        name=player_names.pop(),
-        model=villager_model,
-        # personality="You are cunning.",
-    )
-    doctor = Doctor(name=player_names.pop(), model=villager_model)
+    # seer = Seer(
+    #     name=player_names.pop(),
+    #     model=villager_model,
+    #     # personality="You are cunning.",
+    # )
+    # doctor = Doctor(name=player_names.pop(), model=villager_model)
     werewolves = [
         Werewolf(name=player_names.pop(), model=werewolf_model) for _ in range(2)
     ]
     villagers = [Villager(name=name, model=villager_model) for name in player_names]
 
     # Initialize game view for all players
-    for player in [seer, doctor] + werewolves + villagers:
+    for player in [] + werewolves + villagers:  # seer, doctor
         other_wolf = (
             next((w.name for w in werewolves if w != player), None)
             if isinstance(player, Werewolf)
@@ -100,13 +100,13 @@ def initialize_players(
         tqdm.tqdm.write(f"{player.name} has role {player.role}")
         player.initialize_game_view(
             current_players=player_names
-            + [seer.name, doctor.name]
+            # + [seer.name, doctor.name]
             + [w.name for w in werewolves],
             round_number=0,
             other_wolf=other_wolf,
         )
 
-    return seer, doctor, villagers, werewolves
+    return None, None, villagers, werewolves
 
 
 def resume_game(directory: str) -> bool:

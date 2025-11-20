@@ -15,9 +15,9 @@
 GAME = """You are playing a digital version of the social deduction game Werewolf (also known as Mafia).
 
 GAME RULES:
-- Player Roles: {{num_players}} players - 2 Werewolves, 1 Seer, 1 Doctor, {{num_villagers}} Villagers.
+- Player Roles: {{num_players}} players - 2 Werewolves, {{num_villagers}} Villagers.
 - Rounds consist of two phases:
-    - Night Phase: Werewolves remove a player. Seer identifies a player's role. Doctor saves a player. If no one is removed, the Doctor saved the Werewolf's target.
+    - Night Phase: Werewolves remove a player.
     - Day Phase: Players debate and vote to remove one player.
 - Winning Conditions: Villagers win by voting out both Werewolves. Werewolves win when they outnumber the Villagers."""
 
@@ -106,7 +106,6 @@ DEBATE = PREFIX + DEBATE_SO_FAR_THIS_ROUND + """INSTRUCTIONS:
 - Scrutinize every accusation, expose inconsistencies, and call out suspicious behavior or unusally quite players. Don't hesitate to make bold accusations!
 - Emphasize teamwork and propose strategies to expose the Werewolves. Working together will be key to identifying the Werewolves.
 {% if role == 'Villager' -%}
-- If someone reveals themselves as the Seer or Doctor, try and corroborate their information with what you know.
 {% elif role in ['Seer', 'Doctor'] -%}
 - Sharing your role can be powerful, but it also makes you a target. The dilemma: continue to help the Village in secret, or reveal information only you have for potentially greater impact? Choose your moment wisely.
 {% endif -%}
@@ -133,7 +132,7 @@ VOTE = PREFIX + DEBATE_SO_FAR_THIS_ROUND + """INSTRUCTIONS:
 - Your vote will not be revealed to the other players, it will remain private.
 - Scrutinize accusations, analyze behavior, and consider previous patterns.
 {% if role == 'Werewolf' -%}
-- Target Villagers who are disrupting your plans, particularly those who seem to hold influence, might be the Doctor or Seer, or pose a threat to you and your fellow Werewolf.
+- Target Villagers who are disrupting your plans, particularly those who seem to hold influence or pose a threat to you and your fellow Werewolf.
 - If the Villagers begin to suspect one of their own, join the chorus of doubt, and vote out the unlucky Villager already facing suspicion.
 {% else -%}
 - To find the likely Werewolves, look for inconsistencies in their stories, attempts to deflect blame, a tendency to sow discord among other Villagers, or unusually quiet players.
@@ -243,7 +242,7 @@ SUMMARIZE = PREFIX + DEBATE_SO_FAR_THIS_ROUND + """INSTRUCTIONS:
 {% else -%}
 - When a player makes a significant statement or shares information, carefully consider its credibility. Does it align with what you already know?
 - Analyze how others participate in the debate. Are there any contradictions in their words? Hidden motives behind their actions? Unusually quiet players?
-- Based on the debate, can you identify potential allies, trustworthy players, or those who might be the Seer or Doctor?
+- Based on the debate, can you identify potential allies and trustworthy players?
 {% endif %}
 
 ```json
