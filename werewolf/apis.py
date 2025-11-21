@@ -82,6 +82,7 @@ def generate_openrouter(model: str, prompt: str, json_mode: bool = True, **kwarg
     )
 
     if model.endswith(":free"):
+        print("cooldown")
         time.sleep(7)
     # print(f'|responselen| {len(response.choices)}')
     txt = response.choices[0].message.content

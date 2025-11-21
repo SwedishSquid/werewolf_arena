@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import dataclasses
+import time
 from typing import Any, Dict, List, Optional
 
 import jinja2
@@ -27,6 +28,10 @@ class LmLog(Deserializable):
     prompt: str
     raw_resp: str
     result: Any
+    model_id: str
+    api_call_time: float
+    retry_attempt: int
+    call_successful: bool
 
     @classmethod
     def from_json(cls, data: Dict[Any, Any]):
@@ -66,9 +71,10 @@ def generate(
 
     prompt = format_prompt(prompt_template, worldstate)
     raw_responses = []
-    for _ in range(RETRIES):
+    for attempt in range(1, RETRIES + 1):
         raw_resp = None
         try:
+            start_time = time.time()
             raw_resp = apis.generate(
                 model=model,
                 prompt=prompt,
@@ -77,8 +83,19 @@ def generate(
                 disable_recitation=True,
                 disable_safety_check=True,
             )
+            end_time = time.time()
+            api_call_time = end_time - start_time
+            
             result = utils.parse_json(raw_resp)
-            log = LmLog(prompt=prompt, raw_resp=raw_resp, result=result)
+            log = LmLog(
+                prompt=prompt,
+                raw_resp=raw_resp,
+                result=result,
+                model_id=model,
+                api_call_time=api_call_time,
+                retry_attempt=attempt,
+                call_successful=True
+            )
 
             if result and result_key:
                 result = result.get(result_key)
@@ -91,6 +108,13 @@ def generate(
         temperature = min(1.0, temperature + 0.2)
         raw_responses.append(raw_resp)
 
+    # If all attempts failed, log the final failed attempt
     return None, LmLog(
-        prompt=prompt, raw_resp="-------".join(raw_responses), result=None
+        prompt=prompt,
+        raw_resp="-------".join(raw_responses),
+        result=None,
+        model_id=model,
+        api_call_time=0.0,
+        retry_attempt=RETRIES,
+        call_successful=False
     )
