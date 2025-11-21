@@ -46,6 +46,11 @@ _VILLAGER_MODELS = flags.DEFINE_list(
 _WEREWOLF_MODELS = flags.DEFINE_list(
     "w_models", "", "The model used for werewolves values are: flash, pro, gpt4"
 )
+_MODEL_POOL = flags.DEFINE_list(
+    "model_pool",
+    [],
+    "Models for diverse run mode, comma separated list of models of N_PLAYERS length",
+)
 _ARENA = flags.DEFINE_boolean(
     "arena", False, "Only run games using different models for villagers and werewolves"
 )
@@ -69,6 +74,50 @@ def map_model_to_id(model: str):
     if model in model_to_id:
         return model_to_id[model]
     return model
+
+
+def initialize_diverse_players(
+    model_pool: list[str],
+) -> Tuple[Seer, Doctor, List[Villager], List[Werewolf]]:
+    player_names = get_player_names()
+    model_pool = model_pool[:]
+    assert len(model_pool) == len(player_names), (
+        f"size of model_pool({len(model_pool)}) not equal to count of player names ({len(player_names)})"
+    )
+    random.shuffle(player_names)
+    random.shuffle(model_pool)
+
+    seer = Seer(
+        name=player_names.pop(),
+        model=model_pool.pop(),
+        # personality="You are cunning.",
+    )
+    doctor = Doctor(name=player_names.pop(), model=model_pool.pop())
+    werewolves = [
+        Werewolf(name=player_names.pop(), model=model_pool.pop()) for _ in range(2)
+    ]
+    villagers = [
+        Villager(name=name, model=model)
+        for name, model in zip(player_names, model_pool)
+    ]
+
+    # Initialize game view for all players
+    for player in [seer, doctor] + werewolves + villagers:
+        other_wolf = (
+            next((w.name for w in werewolves if w != player), None)
+            if isinstance(player, Werewolf)
+            else None
+        )
+        tqdm.tqdm.write(f"{player.name} has role {player.role}")
+        player.initialize_game_view(
+            current_players=player_names
+            + [seer.name, doctor.name]
+            + [w.name for w in werewolves],
+            round_number=0,
+            other_wolf=other_wolf,
+        )
+
+    return seer, doctor, villagers, werewolves
 
 
 def initialize_players(
@@ -208,6 +257,36 @@ def resume_games(directories: list[str]):
     )
 
 
+def run_various_models_game(model_pool: list[str]) -> Tuple[str, str]:
+    """Runs a single game of Werewolf.
+
+    Returns: (winner, log_dir)
+    """
+    seer, doctor, villagers, werewolves = initialize_diverse_players(model_pool)
+    session_id = "10"  # You might want to make this unique per game
+    state = State(
+        villagers=villagers,
+        werewolves=werewolves,
+        seer=seer,
+        doctor=doctor,
+        session_id=session_id,
+    )
+
+    gamemaster = game.GameMaster(state, num_threads=_THREADS.value)
+    winner = None
+    try:
+        winner = gamemaster.run_game()
+    except Exception as e:
+        state.error_message = traceback.format_exc()
+        print(f"Error encountered during game: {e}")
+
+    log_directory = logging.log_directory()
+    logging.save_game(state, gamemaster.logs, log_directory)
+    print(f"Game logs saved to: {log_directory}")
+
+    return winner, log_directory
+
+
 def run_game(
     werewolf_model: str,
     villager_model: str,
@@ -249,7 +328,11 @@ def run() -> None:
     v_ids = [map_model_to_id(m) for m in villager_models]
     w_ids = [map_model_to_id(m) for m in werewolf_models]
     model_combinations = list(itertools.product(v_ids, w_ids))
-    if _RUN_GAME.value:
+    if _MODEL_POOL.value:
+        model_pool = _MODEL_POOL.value
+        print(f"using model_pool mode with models {model_pool}")
+        run_various_models_game(model_pool)
+    elif _RUN_GAME.value:
         villager_model, werewolf_model = model_combinations[0]
         print(f"Villagers: {villager_model} versus Werwolves:  {werewolf_model}")
         run_game(
