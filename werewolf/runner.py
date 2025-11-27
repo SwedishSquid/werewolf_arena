@@ -87,12 +87,12 @@ def initialize_diverse_players(
     random.shuffle(player_names)
     random.shuffle(model_pool)
 
-    seer = Seer(
-        name=player_names.pop(),
-        model=model_pool.pop(),
-        # personality="You are cunning.",
-    )
-    doctor = Doctor(name=player_names.pop(), model=model_pool.pop())
+    # seer = Seer(
+    #     name=player_names.pop(),
+    #     model=model_pool.pop(),
+    #     # personality="You are cunning.",
+    # )
+    # doctor = Doctor(name=player_names.pop(), model=model_pool.pop())
     werewolves = [
         Werewolf(name=player_names.pop(), model=model_pool.pop()) for _ in range(2)
     ]
@@ -102,7 +102,7 @@ def initialize_diverse_players(
     ]
 
     # Initialize game view for all players
-    for player in [seer, doctor] + werewolves + villagers:
+    for player in [] + werewolves + villagers:  # seer, doctor
         other_wolf = (
             next((w.name for w in werewolves if w != player), None)
             if isinstance(player, Werewolf)
@@ -111,13 +111,13 @@ def initialize_diverse_players(
         tqdm.tqdm.write(f"{player.name} has role {player.role}")
         player.initialize_game_view(
             current_players=player_names
-            + [seer.name, doctor.name]
+            # + [seer.name, doctor.name]
             + [w.name for w in werewolves],
             round_number=0,
             other_wolf=other_wolf,
         )
 
-    return seer, doctor, villagers, werewolves
+    return None, None, villagers, werewolves
 
 
 def initialize_players(
