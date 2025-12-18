@@ -124,6 +124,8 @@ class Player(Deserializable):
     self.observations: List[str] = []
     self.bidding_rationale = ""
     self.gamestate: Optional[GameView] = None
+    self.thoughts: list[str] = []
+    self.last_round = -1
 
   def initialize_game_view(
       self, round_number, current_players, other_wolf=None
@@ -164,6 +166,11 @@ class Player(Deserializable):
         for author, dialogue in self.gamestate.debate
     ]
 
+    if self.gamestate.round_number != self.last_round:
+      self.last_round = self.gamestate.round_number
+      self.thoughts = []
+    formatted_thoughts = self.thoughts[:]
+
     formatted_observations = group_and_format_observations(self.observations)
 
     return {
@@ -173,6 +180,7 @@ class Player(Deserializable):
         "observations": formatted_observations,
         "remaining_players": ", ".join(remaining_players),
         "debate": formatted_debate,
+        "thoughts": formatted_thoughts,
         "bidding_rationale": self.bidding_rationale,
         "debate_turns_left": MAX_DEBATE_TURNS - len(formatted_debate),
         "personality": self.personality,
@@ -227,6 +235,8 @@ class Player(Deserializable):
       self._add_observation(
           f"After the debate, I voted to remove {vote} from the game."
       )
+      reasoning = log.result.get("reasoning", None)
+      self.thoughts.append(f"You vote to remove {vote} because: {reasoning}")
     return vote, log
 
   def bid(self) -> tuple[int | None, LmLog]:
@@ -234,7 +244,9 @@ class Player(Deserializable):
     bid, log = self._generate_action("bid", options=["0", "1", "2", "3", "4"])
     if bid is not None:
       bid = int(bid)
-      self.bidding_rationale = log.result.get("reasoning", "")
+      reasoning = log.result.get("reasoning", "")
+      self.bidding_rationale = reasoning
+      self.thoughts.append(f"- You bid {bid} because: {reasoning}")
     return bid, log
 
   def debate(self) -> tuple[str | None, LmLog]:
@@ -242,6 +254,8 @@ class Player(Deserializable):
     result, log = self._generate_action("debate", [])
     if result is not None:
       say = result.get("say", None)
+      reasoning = result.get("reasoning", None)
+      self.thoughts.append(f"- You spoke with following thoughts: {reasoning}")
       return say, log
     return result, log
 

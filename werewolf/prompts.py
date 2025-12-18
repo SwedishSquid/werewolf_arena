@@ -17,8 +17,8 @@ GAME = """You are playing a digital version of the social deduction game Werewol
 GAME RULES:
 - Player Roles: {{num_players}} players - 2 Werewolves, 1 Seer, 1 Doctor, {{num_villagers}} Villagers.
 - Rounds consist of two phases:
-    - Night Phase: Werewolves remove a player. Seer identifies a player's role. Doctor saves a player. If no one is removed, the Doctor saved the Werewolf's target.
-    - Day Phase: Players debate and vote to remove one player.
+    - Night Phase: Werewolves remove a player. Seer identifies a player's role. Doctor chooses a player to save. If Doctor and Werewolves select the same player then no one is removed - it means that Doctor saved Werewolves' target.
+    - Day Phase: Players debate and vote to remove one player. During debate each player bids with an int from 0 to 4 - player with highest bid speaks.
 - Winning Conditions: Villagers win by voting out both Werewolves. Werewolves win when they outnumber the Villagers."""
 
 STATE = """GAME STATE:
@@ -35,13 +35,23 @@ OBSERVATIONS = """{% if observations|length -%}YOUR PRIVATE OBSERVATIONS:
 {% endfor %}
 {% endif %}"""
 
+
+THOUGHTS_THIS_ROUND = """YOUR THOUGHTS AND BIDS DURING THIS ROUND:
+{% if thoughts|length -%}
+{% for turn in thoughts -%}
+{{ turn }}
+{% endfor -%}
+{% else %}
+Round has just begun, no thoughts yet.{% endif %}\n\n"""
+
+
 DEBATE_SO_FAR_THIS_ROUND = """\nROUND {{round}} DEBATE:
 {% if debate|length -%}
 {% for turn in debate -%}
 {{ turn }}
 {% endfor -%}
 {% else -%}
-The debate has not begun.{% endif %}\n\n"""
+The debate has not begun.{% endif %}\n\n""" + THOUGHTS_THIS_ROUND
 
 PREFIX = f"""{GAME}
 
