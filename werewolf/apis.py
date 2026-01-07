@@ -26,7 +26,57 @@ from google import genai
 import time
 
 
+def generate_mock(model, prompt, response_schema=None, **kwargs):
+    """Mock LM backend for simulation/testing. Returns canned, deterministic responses."""
+    # Pick a canned response based on the prompt or schema
+    # Use the schema to determine the action type
+    import json
+    import random
+
+    # Try to guess the action from the prompt
+    if '"bid":' in prompt or "BID OPTIONS" in prompt:
+        # Always bid 2
+        return json.dumps({"reasoning": "I want to contribute.", "bid": "2"})
+    if '"say":' in prompt or "Your public statement" in prompt:
+        return json.dumps(
+            {"reasoning": "I want to help my team.", "say": "Let's work together!"}
+        )
+    if '"vote":' in prompt:
+        # Pick the first option
+        options = []
+        if (
+            response_schema
+            and "properties" in response_schema
+            and "vote" in response_schema["properties"]
+        ):
+            # Try to extract options from prompt
+            import re
+
+            m = re.search(r"Choose from: ([^\n\"]+)", prompt)
+            if m:
+                options = [x.strip() for x in m.group(1).split(",")]
+        vote = options[0] if options else "Tyler42"
+        return json.dumps({"reasoning": "I think they are suspicious.", "vote": vote})
+    if '"investigate":' in prompt:
+        return json.dumps({"reasoning": "Random choice.", "investigate": "Tyler"})
+    if '"remove":' in prompt:
+        return json.dumps({"reasoning": "Remove a threat.", "remove": "Tyler"})
+    if '"protect":' in prompt:
+        return json.dumps({"reasoning": "Protect a friend.", "protect": "Tyler"})
+    if '"summary":' in prompt:
+        return json.dumps(
+            {
+                "reasoning": "Summarizing the round.",
+                "summary": "I think we should be careful.",
+            }
+        )
+    # Default fallback
+    return json.dumps({"reasoning": "Default mock response."})
+
+
 def generate(model, **kwargs):
+    if model == "mock" or (isinstance(model, str) and model.startswith("mock")):
+        return generate_mock(model, **kwargs)
     # return generate_genai(model, **kwargs)
     return generate_openrouter(model, **kwargs)
 

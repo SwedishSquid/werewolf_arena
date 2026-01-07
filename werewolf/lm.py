@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import dataclasses
 import time
 from typing import Any, Dict, List, Optional
-
 import jinja2
 from werewolf import utils
 from werewolf.utils import Deserializable
 from werewolf import apis
 from werewolf.config import RETRIES
+import jsonschema
 
 
 @dataclasses.dataclass
@@ -71,6 +72,7 @@ def generate(
 
     prompt = format_prompt(prompt_template, worldstate)
     raw_responses = []
+    validation_error_msg = None
     for attempt in range(1, RETRIES + 1):
         raw_resp = None
         try:
@@ -85,8 +87,20 @@ def generate(
             )
             end_time = time.time()
             api_call_time = end_time - start_time
-            
+
             result = utils.parse_json(raw_resp)
+            # Validate against schema if result is not None
+            if result is not None:
+                try:
+                    jsonschema.validate(instance=result, schema=response_schema)
+                    validation_error_msg = None
+                except jsonschema.ValidationError as ve:
+                    validation_error_msg = str(ve)
+                    print(f"Schema validation failed: {validation_error_msg}")
+                    result = None
+            else:
+                validation_error_msg = "Parsing failed: result is None"
+
             log = LmLog(
                 prompt=prompt,
                 raw_resp=raw_resp,
@@ -94,13 +108,15 @@ def generate(
                 model_id=model,
                 api_call_time=api_call_time,
                 retry_attempt=attempt,
-                call_successful=True
+                call_successful=(result is not None),
             )
 
             if result and result_key:
                 result = result.get(result_key)
 
-            if allowed_values is None or result in allowed_values:
+            if result is not None and (
+                allowed_values is None or result in allowed_values
+            ):
                 return result, log
 
         except Exception as e:
@@ -109,12 +125,16 @@ def generate(
         raw_responses.append(raw_resp)
 
     # If all attempts failed, log the final failed attempt
-    return None, LmLog(
+    fail_log = LmLog(
         prompt=prompt,
         raw_resp="-------".join(raw_responses),
         result=None,
         model_id=model,
         api_call_time=0.0,
         retry_attempt=RETRIES,
-        call_successful=False
+        call_successful=False,
     )
+    if validation_error_msg:
+        print(f"Final schema validation error: {validation_error_msg}")
+        fail_log.result = {"validation_error": validation_error_msg}
+    return None, fail_log

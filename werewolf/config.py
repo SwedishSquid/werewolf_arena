@@ -20,7 +20,9 @@ NAMES = [
     "Ginger", "Jackson", "Mason", "Dan", "Bert", "Will", "Sam",
     "Paul", "Leah", "Harold"
 ]  # names of famous Werewolves according to Wikipedia
-RUN_SYNTHETIC_VOTES = True
+
+RUN_SYNTHETIC_VOTES = False # this makes agents vote after each turn of the dialog, which is pretty wasteful
+
 MAX_DEBATE_TURNS = 8
 NUM_PLAYERS = 8
 

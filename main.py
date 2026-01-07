@@ -20,5 +20,15 @@ def main(_):
     run()
 
 
+# replace agent calling with randomized responses - useful for quick debug
+MOCK_MODE = True
+
+
 if __name__ == "__main__":
-    absl_app.run(main)
+    if MOCK_MODE:
+        print("=" * 60)
+        print(" " * 20, "!!!WARNING: MOCK MODE IS USED!!!")
+        print("=" * 60)
+        absl_app.run(main, ["main.py", "--run", "--sim"])
+    else:
+        absl_app.run(main)

@@ -34,6 +34,7 @@ from werewolf.model import WEREWOLF
 from werewolf.model import Werewolf
 from werewolf.config import get_player_names
 
+
 _RUN_GAME = flags.DEFINE_boolean("run", False, "Runs a single game.")
 _RESUME = flags.DEFINE_boolean("resume", False, "Resumes games.")
 _EVAL = flags.DEFINE_boolean("eval", False, "Collect eval data by running many games.")
@@ -41,10 +42,10 @@ _NUM_GAMES = flags.DEFINE_integer(
     "num_games", 2, "Number of games to run used with eval."
 )
 _VILLAGER_MODELS = flags.DEFINE_list(
-    "v_models", "", "The model used for villagers values are: flash, pro, gpt4"
+    "v_models", "", "The model used for villagers values are: flash, pro, gpt4, mock"
 )
 _WEREWOLF_MODELS = flags.DEFINE_list(
-    "w_models", "", "The model used for werewolves values are: flash, pro, gpt4"
+    "w_models", "", "The model used for werewolves values are: flash, pro, gpt4, mock"
 )
 _MODEL_POOL = flags.DEFINE_list(
     "model_pool",
@@ -55,6 +56,9 @@ _ARENA = flags.DEFINE_boolean(
     "arena", False, "Only run games using different models for villagers and werewolves"
 )
 _THREADS = flags.DEFINE_integer("threads", 8, "Number of threads to run.")
+_SIM = flags.DEFINE_boolean(
+    "sim", False, "Run in simulation mode using mock LM backend."
+)
 
 DEFAULT_WEREWOLF_MODELS = ["flash", "pro1.5"]
 DEFAULT_VILLAGER_MODELS = ["flash", "pro1.5"]
@@ -328,8 +332,18 @@ def run() -> None:
     v_ids = [map_model_to_id(m) for m in villager_models]
     w_ids = [map_model_to_id(m) for m in werewolf_models]
     model_combinations = list(itertools.product(v_ids, w_ids))
+
+    # If --sim is set, override all models to 'mock'
+    if _SIM.value:
+        v_ids = ["mock"] * len(v_ids)
+        w_ids = ["mock"] * len(w_ids)
+        print("Running in simulation mode with mock LM backend.")
+        model_combinations = list(itertools.product(v_ids, w_ids))
+
     if _MODEL_POOL.value:
         model_pool = _MODEL_POOL.value
+        if _SIM.value:
+            model_pool = ["mock"] * len(model_pool)
         print(f"using model_pool mode with models {model_pool}")
         run_various_models_game(model_pool)
     elif _RUN_GAME.value:

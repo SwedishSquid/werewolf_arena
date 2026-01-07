@@ -33,14 +33,26 @@ The program will read from this environment variable.
  gcloud auth application-default login
  ```
 
+
 ## Run a single game
 
 `python3 main.py --run --v_models=pro1.5 --w_models=gpt4`
 
-
 ## Run games between all model combinations
 
 `python3 main.py --eval --num_games=5 --v_models=pro1.5,flash --w_models=gpt4,gpt4o`
+
+## Simulation mode (mock LLM, fast deterministic runs)
+
+You can run the game with a mock language model backend for fast, deterministic (not fully - names and roles are still random) simulation/testing:
+
+`python3 main.py --run --sim`
+
+Or for evaluation:
+
+`python3 main.py --eval --sim --num_games=10`
+
+This uses a built-in mock LLM that returns canned responses for all actions, so you can test the game logic and logs without any API calls or costs.
 
 ## Bulk resume failed games
 
