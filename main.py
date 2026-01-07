@@ -21,7 +21,7 @@ def main(_):
 
 
 # replace agent calling with randomized responses - useful for quick debug
-MOCK_MODE = True
+MOCK_MODE = False
 
 
 if __name__ == "__main__":
