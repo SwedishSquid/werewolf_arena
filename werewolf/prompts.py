@@ -36,22 +36,22 @@ OBSERVATIONS = """{% if observations|length -%}YOUR PRIVATE OBSERVATIONS:
 {% endif %}"""
 
 
-THOUGHTS_THIS_ROUND = """YOUR THOUGHTS AND BIDS DURING THIS ROUND:
-{% if thoughts|length -%}
-{% for turn in thoughts -%}
-{{ turn }}
-{% endfor -%}
-{% else %}
-Round has just begun, no thoughts yet.{% endif %}\n\n"""
+# THOUGHTS_THIS_ROUND = """YOUR THOUGHTS AND BIDS DURING THIS ROUND:
+# {% if thoughts|length -%}
+# {% for turn in thoughts -%}
+# {{ turn }}
+# {% endfor -%}
+# {% else %}
+# Round has just begun, no thoughts yet.{% endif %}\n\n"""
 
 
-DEBATE_SO_FAR_THIS_ROUND = """\nROUND {{round}} DEBATE:
-{% if debate|length -%}
-{% for turn in debate -%}
-{{ turn }}
+THIS_ROUND_EVENTS = """\nCURRENT ROUND EVENTS (ROUND {{round}}):
+{% if round_events|length -%}
+{% for event in round_events -%}
+{{ event }}
 {% endfor -%}
 {% else -%}
-The debate has not begun.{% endif %}\n\n""" + THOUGHTS_THIS_ROUND
+Round has just begun, nothing happened yet.{% endif %}\n\n"""# + THOUGHTS_THIS_ROUND
 
 PREFIX = f"""{GAME}
 
@@ -62,7 +62,7 @@ PREFIX = f"""{GAME}
 
 BIDDING = (
     PREFIX
-    + DEBATE_SO_FAR_THIS_ROUND
+    + THIS_ROUND_EVENTS
     + """CONTEXT: For the chance to speak next you will place a bid. Highest bidder speaks first.
 - BID OPTIONS:
   0: I would like to observe and listen for now.
@@ -102,9 +102,8 @@ BIDDING_SCHEMA = {
     "required": ["reasoning", "bid"],
 }
 
-DEBATE = PREFIX + DEBATE_SO_FAR_THIS_ROUND + """INSTRUCTIONS:
+DEBATE = PREFIX + THIS_ROUND_EVENTS + """INSTRUCTIONS:
 - You are speaking next in the debate as {{name}} the {{role}}.
-- Your thoughts on speaking next: {{bidding_rationale}}
 {% if role == 'Werewolf' -%}
 - Your goal is to sow chaos and evade detection.
 - Cast suspicion on Villagers. Make them doubt each other.
@@ -138,7 +137,7 @@ DEBATE_SCHEMA = {
     "required": ["reasoning", "say"],
 }
 
-VOTE = PREFIX + DEBATE_SO_FAR_THIS_ROUND + """INSTRUCTIONS:
+VOTE = PREFIX + THIS_ROUND_EVENTS + """INSTRUCTIONS:
 - Think strategically as {{name}} the {{role}} and decide who to vote out.
 - Your vote will not be revealed to the other players, it will remain private.
 - Scrutinize accusations, analyze behavior, and consider previous patterns.
@@ -243,7 +242,7 @@ PROTECT_SCHEMA = {
     "required": ["reasoning", "protect"],
 }
 
-SUMMARIZE = PREFIX + DEBATE_SO_FAR_THIS_ROUND + """INSTRUCTIONS:
+SUMMARIZE = PREFIX + THIS_ROUND_EVENTS + """INSTRUCTIONS:
 - Reflect on the round's debate as {{name}} the {{role}}.
 - Summarize the key points and strategic implications.
 {% if role == 'Werewolf' -%}

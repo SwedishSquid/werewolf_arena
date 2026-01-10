@@ -189,7 +189,7 @@ class GameMaster:
       for name in self.this_round.players:
         player = self.state.players[name]
         if player.gamestate:
-          player.gamestate.update_debate(next_speaker, dialogue)
+          player.add_debate_utterance(next_speaker, dialogue)
         else:
           raise ValueError(f"{name}.gamestate needs to be initialized.")
 
@@ -337,7 +337,7 @@ class GameMaster:
           self.state.players[name].gamestate.round_number = (
               self.current_round_num + 1
           )
-          self.state.players[name].gamestate.clear_debate()
+          self.state.players[name].gamestate.clear_round_events()
       self.current_round_num += 1
 
     tqdm.tqdm.write("Game is complete!")

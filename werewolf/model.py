@@ -79,16 +79,22 @@ class GameView:
   ):
     self.round_number: int = round_number
     self.current_players: List[str] = current_players
-    self.debate: List[tuple[str, str]] = []
+    self.round_events: List[tuple[str, str]] = []
     self.other_wolf: Optional[str] = other_wolf
+    self.n_utterances_this_round = 0
+
+  def add_event(self, event_name: str, content: str):
+    self.round_events.append((event_name, content))
 
   def update_debate(self, author: str, dialogue: str):
     """Adds a new dialogue entry to the debate."""
-    self.debate.append((author, dialogue))
+    self.n_utterances_this_round += 1
+    self.add_event(author, dialogue)
 
-  def clear_debate(self):
+  def clear_round_events(self):
     """Clears all entries from the debate."""
-    self.debate.clear()
+    self.n_utterances_this_round = 0
+    self.round_events.clear()
 
   def remove_player(self, player_to_remove: str):
     """Removes a player from the list of current players."""
@@ -124,8 +130,6 @@ class Player(Deserializable):
     self.observations: List[str] = []
     self.bidding_rationale = ""
     self.gamestate: Optional[GameView] = None
-    self.thoughts: list[str] = []
-    self.last_round = -1
 
   def initialize_game_view(
       self, round_number, current_players, other_wolf=None
@@ -142,6 +146,10 @@ class Player(Deserializable):
     self.observations.append(
         f"Round {self.gamestate.round_number}: {observation}"
     )
+  
+  def add_debate_utterance(self, author: str, content: str):
+    author = f"[{author} (You) said]" if author == self.name else f"[{author} said]"
+    self.gamestate.update_debate(author=author, dialogue=content)
 
   def add_announcement(self, announcement: str):
     """Adds the current game announcement to the player's observations."""
@@ -159,17 +167,10 @@ class Player(Deserializable):
         for player in self.gamestate.current_players
     ]
     random.shuffle(remaining_players)
-    formatted_debate = [
-        f"{author} (You): {dialogue}"
-        if author == self.name
-        else f"{author}: {dialogue}"
-        for author, dialogue in self.gamestate.debate
+    formatted_events = [
+        f"{event_name}: {content}"
+        for event_name, content in self.gamestate.round_events
     ]
-
-    if self.gamestate.round_number != self.last_round:
-      self.last_round = self.gamestate.round_number
-      self.thoughts = []
-    formatted_thoughts = self.thoughts[:]
 
     formatted_observations = group_and_format_observations(self.observations)
 
@@ -179,10 +180,9 @@ class Player(Deserializable):
         "round": self.gamestate.round_number,
         "observations": formatted_observations,
         "remaining_players": ", ".join(remaining_players),
-        "debate": formatted_debate,
-        "thoughts": formatted_thoughts,
+        "round_events": formatted_events,
         "bidding_rationale": self.bidding_rationale,
-        "debate_turns_left": MAX_DEBATE_TURNS - len(formatted_debate),
+        "debate_turns_left": MAX_DEBATE_TURNS - len(formatted_events),
         "personality": self.personality,
         "num_players": NUM_PLAYERS,
         "num_villagers": NUM_PLAYERS - 4, 
@@ -231,12 +231,14 @@ class Player(Deserializable):
     ]
     random.shuffle(options)
     vote, log = self._generate_action("vote", options)
-    if vote is not None and len(self.gamestate.debate) == MAX_DEBATE_TURNS:
+    if vote is not None and self.gamestate.n_utterances_this_round == MAX_DEBATE_TURNS:
       self._add_observation(
           f"After the debate, I voted to remove {vote} from the game."
       )
       reasoning = log.result.get("reasoning", None)
-      self.thoughts.append(f"You vote to remove {vote} because: {reasoning}")
+      assert reasoning is not None, "reasoning somehow None"
+      self.gamestate.add_event("[Your thoughts about who to vote out]", reasoning)
+      self.gamestate.add_event("[You voted to remove]", vote)
     return vote, log
 
   def bid(self) -> tuple[int | None, LmLog]:
@@ -246,16 +248,18 @@ class Player(Deserializable):
       bid = int(bid)
       reasoning = log.result.get("reasoning", "")
       self.bidding_rationale = reasoning
-      self.thoughts.append(f"- You bid {bid} because: {reasoning}")
+      self.gamestate.add_event("[Your bidding-to-speak rationale]", reasoning)
+      self.gamestate.add_event("[Your bid]", str(bid))
     return bid, log
 
   def debate(self) -> tuple[str | None, LmLog]:
     """Engage in the debate."""
+    self.gamestate.add_event('[You are about to speak]', "You will speak now because your bid was one of the highest.")
     result, log = self._generate_action("debate", [])
     if result is not None:
       say = result.get("say", None)
       reasoning = result.get("reasoning", None)
-      self.thoughts.append(f"- You spoke with following thoughts: {reasoning}")
+      self.gamestate.add_event('[Your thoughts just before speaking]', reasoning)
       return say, log
     return result, log
 
