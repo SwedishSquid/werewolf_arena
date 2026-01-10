@@ -182,7 +182,7 @@ class Player(Deserializable):
         "remaining_players": ", ".join(remaining_players),
         "round_events": formatted_events,
         "bidding_rationale": self.bidding_rationale,
-        "debate_turns_left": MAX_DEBATE_TURNS - len(formatted_events),
+        "debate_turns_left": MAX_DEBATE_TURNS - self.gamestate.n_utterances_this_round,
         "personality": self.personality,
         "num_players": NUM_PLAYERS,
         "num_villagers": NUM_PLAYERS - 4, 
@@ -346,6 +346,10 @@ class Werewolf(Player):
     ]
     random.shuffle(options)
     eliminate, log = self._generate_action("remove", options)
+    if eliminate is not None:
+      reasoning = log.result.get("reasoning", None)
+      self.gamestate.add_event('[You as a werewolf thought about who to remove this night]', reasoning)
+      self.gamestate.add_event('[You as a werewolf decided to remove]', eliminate)
     return eliminate, log
 
   def _get_werewolf_context(self):
@@ -400,7 +404,12 @@ class Seer(Player):
         if player != self.name and player not in self.previously_unmasked.keys()
     ]
     random.shuffle(options)
-    return self._generate_action("investigate", options)
+    investigate, log = self._generate_action("investigate", options)
+    if investigate is not None:
+      reasoning = log.result.get("reasoning", None)
+      self.gamestate.add_event('[Your reasoning about who to investigate this night]', reasoning)
+      self.gamestate.add_event("[You decided to investigate]", investigate)
+    return investigate, log
 
   def reveal_and_update(self, player, role):
     self._add_observation(
@@ -444,6 +453,9 @@ class Doctor(Player):
     random.shuffle(options)
     protected, log = self._generate_action("protect", options)
     if protected is not None:
+      reasoning = log.result.get("reasoning", None)
+      self.gamestate.add_event("[Your reasoning about who to protect this night]", reasoning)
+      self.gamestate.add_event("[You decided to protect]", protected)
       self._add_observation(f"During the night, I chose to protect {protected}")
     return protected, log
 
