@@ -91,7 +91,8 @@ class Demo {
     uiManager.add_eliminated(whoWasKilled);
     uiManager.add_round_header(round, 'Day');
 
-    for (let i = 0; i < 10; i++) {
+    const debate_len = Math.max(data['bid'].length, data['debate'].length)
+    for (let i = 0; i < debate_len; i++) {
       uiManager.add_bids(data['bid'][i]);
       uiManager.add_debate(data['debate'][i]);
     }

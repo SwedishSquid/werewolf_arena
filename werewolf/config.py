@@ -23,8 +23,8 @@ NAMES = [
 
 RUN_SYNTHETIC_VOTES = False # this makes agents vote after each turn of the dialog, which is pretty wasteful
 
-MAX_DEBATE_TURNS = 8
-NUM_PLAYERS = 8
+MAX_DEBATE_TURNS = 12
+NUM_PLAYERS = 10
 
 def get_player_names(): 
     return random.sample(NAMES, NUM_PLAYERS)
