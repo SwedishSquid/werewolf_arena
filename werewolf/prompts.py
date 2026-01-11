@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from werewolf.config import MAX_DEBATE_TURNS
+
 GAME = """You are playing a digital version of the social deduction game Werewolf (also known as Mafia).
 
 GAME RULES:
@@ -20,6 +22,21 @@ GAME RULES:
     - Night Phase: Werewolves remove a player. Seer identifies a player's role. Doctor chooses a player to save. If Doctor and Werewolves select the same player then no one is removed - it means that Doctor saved Werewolves' target.
     - Day Phase: Players debate and vote to remove one player. During debate each player bids with an int from 0 to 4 - player with highest bid speaks.
 - Winning Conditions: Villagers win by voting out both Werewolves. Werewolves win when they outnumber the Villagers."""
+
+
+TECHNICAL_NOTE = f"""TECHNICAL_NOTE:
+- This note is intended to clarify the rules of the game.
+- Debate consists of {MAX_DEBATE_TURNS} turns, each turn one player speaks.
+- Each turn a speaking player is determined by bidding. Each player plays a bid and one with highest bid speaks. If several players share highest bid than one of them is randomly chosen.
+- After debate ends a voting is hold. Each player selects one other player they want to exile. Player with majority of votes is exiled. If majority is not reached, no one is exiled. Majority is more then half of all votes.
+- Werewolves win if they reach number parity with villagers (from this point on they can consistently sabotage voting by not letting majority vote to be reached). Villagers win when no werewolves are left.
+- Doctor and Seer are special roles that play on villagers' side and both have a night action.
+- Doctor's night action is to select one player to protect this night. Chosen player cannot be killed by werewolves this night.
+- Seer's night action is to select one player to investigate. Chosen's player role is revealed to Seer just after this night.
+- Werewolves night action is a bit different - only one werewolf acts per night. He selects a player to try to kill. Chosen player dies if he has not been protected by doctor this night, otherwise no one is removed.
+- Results of the werewolf attacks are broadcast through the moderator's announcement after each night. Voting results are communicated the same way after voting.
+- Your bids, votes and thoughts are shown only to you (they are private). Moderator announcements and debate utterances are public."""
+
 
 STATE = """GAME STATE:
 - It is currently Round {{round}}. {% if round == 0 %}The game has just begun.{% endif %}
@@ -54,6 +71,8 @@ THIS_ROUND_EVENTS = """\nCURRENT ROUND EVENTS (ROUND {{round}}):
 Round has just begun, nothing happened yet.{% endif %}\n\n"""# + THOUGHTS_THIS_ROUND
 
 PREFIX = f"""{GAME}
+
+{TECHNICAL_NOTE}
 
 {STATE}
 
@@ -249,6 +268,7 @@ SUMMARIZE = PREFIX + THIS_ROUND_EVENTS + """INSTRUCTIONS:
 - Pay attention to accusations against you and your allies.
 - Identify sympathetic or easily influenced players.
 - Identify key roles for potential elimination.
+- Resulting summary is all you will remember about current round.
 {% else -%}
 - When a player makes a significant statement or shares information, carefully consider its credibility. Does it align with what you already know?
 - Analyze how others participate in the debate. Are there any contradictions in their words? Hidden motives behind their actions? Unusually quiet players?
