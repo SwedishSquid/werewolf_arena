@@ -22,7 +22,7 @@ from typing import List
 import tqdm
 
 from werewolf.model import Round, RoundLog, State, VoteLog
-from werewolf.config import  MAX_DEBATE_TURNS, RUN_SYNTHETIC_VOTES
+from werewolf.config import  MAX_DEBATE_TURNS, RUN_SYNTHETIC_VOTES, REVEAL_ROLE_UPON_EXILE
 
 def get_max_bids(d):
   """Gets all the keys with the highest value in the dictionary."""
@@ -237,10 +237,13 @@ class GameMaster:
 
     if self.this_round.exiled is not None:
       exiled_player = self.this_round.exiled
+      exiled_player_role = self.state.players[exiled_player].role
       self.this_round.players.remove(exiled_player)
       announcement = (
           f"The majority voted to remove {exiled_player} from the game."
       )
+      if REVEAL_ROLE_UPON_EXILE:
+        announcement += f" Their role was {exiled_player_role}."
     else:
       announcement = (
           "A majority vote was not reached, so no one was removed from the"
@@ -266,7 +269,7 @@ class GameMaster:
           " night."
       )
     else:
-      announcement = "No one was removed from the game during the night."
+      announcement = "No one was removed from the game during the night. (which means Doctor saved werewolves victim)"
     tqdm.tqdm.write(announcement)
 
     for name in self.this_round.players:
