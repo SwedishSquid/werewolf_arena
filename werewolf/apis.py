@@ -129,6 +129,7 @@ def generate_openrouter(model: str, prompt: str, json_mode: bool = True, **kwarg
         messages=[{"role": "user", "content": prompt}],
         response_format=response_format,
         model=model,
+        # timeout=5 * 60,
     )
 
     if model.endswith(":free"):

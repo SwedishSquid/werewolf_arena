@@ -75,10 +75,12 @@ class GameView:
       self,
       round_number: int,
       current_players: List[str],
+      original_player_cast: list[str],
       other_wolf: Optional[str] = None,
   ):
     self.round_number: int = round_number
     self.current_players: List[str] = current_players
+    self.original_player_cast = original_player_cast
     self.round_events: List[tuple[str, str]] = []
     self.other_wolf: Optional[str] = other_wolf
     self.n_utterances_this_round = 0
@@ -132,9 +134,9 @@ class Player(Deserializable):
     self.gamestate: Optional[GameView] = None
 
   def initialize_game_view(
-      self, round_number, current_players, other_wolf=None
+      self, round_number, current_players, original_player_cast, other_wolf=None,
   ) -> None:
-    self.gamestate = GameView(round_number, current_players, other_wolf)
+    self.gamestate = GameView(round_number, current_players, original_player_cast=original_player_cast, other_wolf=other_wolf)
 
   def _add_observation(self, observation: str):
     """Adds an observation for the given round."""
@@ -167,6 +169,10 @@ class Player(Deserializable):
         for player in self.gamestate.current_players
     ]
     random.shuffle(remaining_players)
+
+    original_player_cast = self.gamestate.original_player_cast[:]
+    random.shuffle(original_player_cast)
+
     formatted_events = [
         f"{event_name}: {content}"
         for event_name, content in self.gamestate.round_events
@@ -186,6 +192,7 @@ class Player(Deserializable):
         "personality": self.personality,
         "num_players": NUM_PLAYERS,
         "num_villagers": NUM_PLAYERS - 4, 
+        "original_player_cast": ", ".join(original_player_cast)
     }
 
   def _generate_action(

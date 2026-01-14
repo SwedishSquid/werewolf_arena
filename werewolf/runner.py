@@ -105,6 +105,8 @@ def initialize_diverse_players(
         for name, model in zip(player_names, model_pool)
     ]
 
+    all_player_names = player_names + [seer.name, doctor.name] + [w.name for w in werewolves]
+    random.shuffle(all_player_names)
     # Initialize game view for all players
     for player in [seer, doctor] + werewolves + villagers:
         other_wolf = (
@@ -114,11 +116,10 @@ def initialize_diverse_players(
         )
         tqdm.tqdm.write(f"{player.name} has role {player.role}")
         player.initialize_game_view(
-            current_players=player_names
-            + [seer.name, doctor.name]
-            + [w.name for w in werewolves],
+            current_players=all_player_names[:],
             round_number=0,
             other_wolf=other_wolf,
+            original_player_cast=all_player_names[:],
         )
 
     return seer, doctor, villagers, werewolves
@@ -143,6 +144,8 @@ def initialize_players(
     ]
     villagers = [Villager(name=name, model=villager_model) for name in player_names]
 
+    all_player_names = player_names + [seer.name, doctor.name] + [w.name for w in werewolves]
+    random.shuffle(all_player_names)
     # Initialize game view for all players
     for player in [seer, doctor] + werewolves + villagers:
         other_wolf = (
@@ -152,11 +155,10 @@ def initialize_players(
         )
         tqdm.tqdm.write(f"{player.name} has role {player.role}")
         player.initialize_game_view(
-            current_players=player_names
-            + [seer.name, doctor.name]
-            + [w.name for w in werewolves],
+            current_players=all_player_names[:],
             round_number=0,
             other_wolf=other_wolf,
+            original_player_cast=all_player_names[:],
         )
 
     return seer, doctor, villagers, werewolves
@@ -179,6 +181,7 @@ def resume_game(directory: str) -> bool:
             p.initialize_game_view(
                 round_number=0,
                 current_players=list(state.players.keys()),
+                original_player_cast=list(state.players.keys()),
             )
             p.observations = []
 
@@ -193,6 +196,7 @@ def resume_game(directory: str) -> bool:
             werewolves[1].gamestate.other_wolf = werewolves[0].name
     else:
         # Update the GameView for every active player
+        raise ValueError("not sure that original_player_cast is properly initialized, check if needed")
         werewolves = []
         for p in state.rounds[-1].players:
             player = state.players.get(p, None)
@@ -200,6 +204,7 @@ def resume_game(directory: str) -> bool:
                 player.initialize_game_view(
                     round_number=len(state.rounds),
                     current_players=state.rounds[-1].players[:],
+                    original_player_cast=state.rounds[0].players[:]
                 )
 
                 # Remove the observation from the failed round for all active players

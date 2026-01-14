@@ -50,28 +50,19 @@ GAME_TIPS = """GAME TIPS:
 
 
 STATE = """GAME STATE:
+- The names of all the players: {{original_player_cast}}.
 - It is currently Round {{round}}. {% if round == 0 %}The game has just begun.{% endif %}
 - You are {{name}} the {{role}}. {{werewolf_context}}
 {% if personality -%}
 - Personality: {{ personality }}
 {% endif -%}
-- Remaining players: {{remaining_players}}"""
+- Remaining players (currently alive ones): {{remaining_players}}."""
 
 OBSERVATIONS = """{% if observations|length -%}YOUR PRIVATE OBSERVATIONS:
 {% for turn in observations -%}
 {{ turn }}
 {% endfor %}
 {% endif %}"""
-
-
-# THOUGHTS_THIS_ROUND = """YOUR THOUGHTS AND BIDS DURING THIS ROUND:
-# {% if thoughts|length -%}
-# {% for turn in thoughts -%}
-# {{ turn }}
-# {% endfor -%}
-# {% else %}
-# Round has just begun, no thoughts yet.{% endif %}\n\n"""
-
 
 THIS_ROUND_EVENTS = """\nCURRENT ROUND EVENTS (ROUND {{round}}):
 {% if round_events|length -%}
