@@ -5,3 +5,4 @@ logs/
 node_modules/
 static/index.js
 plots_storage
+shell_logs

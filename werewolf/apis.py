@@ -56,6 +56,8 @@ def generate_mock(model, prompt, response_schema=None, **kwargs):
             if m:
                 options = [x.strip() for x in m.group(1).split(",")]
         vote = options[0] if options else "Tyler42"
+        if "Tyler (You)" not in prompt:
+            vote = "Tyler"
         return json.dumps({"reasoning": "I think they are suspicious.", "vote": vote})
     if '"investigate":' in prompt:
         return json.dumps({"reasoning": "Random choice.", "investigate": "Tyler"})
